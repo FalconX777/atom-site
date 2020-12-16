@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Atom Counter</title>
+    <!-- Add some CSS to change client UI -->
+    <style>
+    body {
+        background-color: #232F3E;
+        }
+    label, button {
+        color: #FF9900;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 20px;
+        margin-left:40px;
+        }
+     input {
+        color: #232F3E;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 20px;
+        margin-left: 60px;
+	margin-right: 20px;
+        }
+    table {
+	color: #FF9900;
+        font-family: Arial, Helvetica, sans-serif;
+	font-size: 20px;
+	border-collapse: collapse;
+	width: 600px;
+	text-align:center;
+	margin-left:80px; 
+	margin-top:30px;
+	}
+    th, td {
+	border: 1px solid black;
+	width: 300px;
+	}
+    </style>
+    <script>
+        // define the callAPI function that takes a first name and last name as parameters
+        var callAPI = (molecule)=>{
+            // instantiate a headers object
+            var myHeaders = new Headers();
+            // add content type header to object
+            myHeaders.append("Content-Type", "application/json");
+            // using built in JSON utility package turn object to string and store in a variable
+            var raw = JSON.stringify({"molecule":molecule});
+            // create a JSON object with parameters for API call and store in a variable
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+            // make API call with parameters and use promises to get response
+            fetch("https://1kvqowzwyk.execute-api.eu-west-1.amazonaws.com/dev", requestOptions)
+            .then(response => response.text())
+            .then(function(result) {
+		var table = document.getElementById('table');
+		// Remove previous table rows
+		var i;
+		for (i = table.rows.length-1; i >= 1; i--){
+		    	table.deleteRow(i);
+		}
+		// Fill the table with the new values
+		var str = JSON.parse(result).body;
+		str = str.slice(1, str.length-1);
+		var relation = str.split(';');
+		for (i = 0; i < relation.length; i++){
+			var cell_content = relation[i].split(',');
+			var row = table.insertRow(i+1);
+			var cell1 = row.insertCell(0);
+			var cell2 = row.insertCell(1);
+			cell1.innerHTML = cell_content[0];
+			cell2.innerHTML = cell_content[1];
+		}
+	    })
+            .catch(error => console.log('error', error));
+        }
+
+    </script>
+</head>
+<body>
+    <form>
+        <label>Your molecule:</label>
+        <input type="text" id="molecule">
+        <button type="button" onclick="callAPI(document.getElementById('molecule').value)" id="btn">Count atoms</button>
+    </form>
+
+    <table id="table">
+	<caption style="margin-bottom:10px;">Number of each atom in the molecule</caption>
+
+	<tr>
+		<th>Atom</th>
+		<th>Number</th>
+	</tr>
+    </table>
+</body>
+</html>
